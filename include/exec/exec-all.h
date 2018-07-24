@@ -17,6 +17,19 @@
  * License along with this library; if not, see <http://www.gnu.org/licenses/>.
  */
 
+/*
+ * The file was modified for S2E Selective Symbolic Execution Framework
+ *
+ * Copyright (c) 2010, Dependable Systems Laboratory, EPFL
+ *
+ * Currently maintained by:
+ *    Volodymyr Kuznetsov <vova.kuznetsov@epfl.ch>
+ *    Vitaly Chipounov <vitaly.chipounov@epfl.ch>
+ *
+ * All contributors are listed in S2E-AUTHORS file.
+ *
+ */
+
 #ifndef EXEC_ALL_H
 #define EXEC_ALL_H
 
@@ -310,6 +323,16 @@ static inline void tlb_flush_by_mmuidx_all_cpus_synced(CPUState *cpu,
 #define USE_DIRECT_JUMP
 #endif
 
+//grin test
+struct TCGLLVMTranslationBlock;
+struct TCGLLVMContext;
+#ifdef __cplusplus
+namespace llvm {class Function;}
+using llvm::Function;
+#else
+struct Function;
+#endif
+
 struct TranslationBlock {
     target_ulong pc;   /* simulated PC corresponding to this block (EIP + CS base) */
     target_ulong cs_base; /* CS base for this block */
@@ -363,6 +386,18 @@ struct TranslationBlock {
      */
     uintptr_t jmp_list_next[2];
     uintptr_t jmp_list_first;
+
+    //grin test
+    struct TCGLLVMContext *tcg_llvm_context;
+#ifdef __cplusplus
+    Function *llvm_funciton;
+#else
+    struct Function *llvm_Function;
+#endif
+    uint8_t *llvm_tc_ptr;
+    uint8_t *llvm_tc_end;
+    struct TranslationBlock* llvm_tb_next[2];
+
 };
 
 void tb_free(TranslationBlock *tb);
@@ -448,6 +483,9 @@ static inline void tb_add_jump(TranslationBlock *tb, int n,
     /* add in TB jmp circular list */
     tb->jmp_list_next[n] = tb_next->jmp_list_first;
     tb_next->jmp_list_first = (uintptr_t)tb | n;
+
+    //grin test
+    tb->llvm_tb_next[n] = tb_next;
 }
 
 /* GETPC is the true target of the return instruction that we'll execute.  */
@@ -515,5 +553,10 @@ bool memory_region_is_unassigned(MemoryRegion *mr);
 
 /* vl.c */
 extern int singlestep;
+
+// grin test
+/* cpu-exec.c */
+extern int generate_llvm;
+extern const int has_llvm_engine;
 
 #endif

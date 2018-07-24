@@ -36,6 +36,12 @@
 #include "sysemu/cpus.h"
 #include "sysemu/replay.h"
 
+//grin test
+#include"grin/tcg-llvm.h"
+const int has_llvm_engine = 1;
+int generate_llvm = 0;
+int execute_llvm = 0;
+
 /* -icount align implementation. */
 
 typedef struct SyncClocks {
