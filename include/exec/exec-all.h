@@ -557,6 +557,7 @@ extern int singlestep;
 // grin test
 /* cpu-exec.c */
 extern int generate_llvm;
+extern int execute_llvm;
 extern const int has_llvm_engine;
 
 #endif

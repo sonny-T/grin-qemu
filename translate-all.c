@@ -16,6 +16,20 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, see <http://www.gnu.org/licenses/>.
  */
+
+/*
+ * The file was modified for S2E Selective Symbolic Execution Framework
+ *
+ * Copyright (c) 2010, Dependable Systems Laboratory, EPFL
+ *
+ * Currently maintained by:
+ *    Volodymyr Kuznetsov <vova.kuznetsov@epfl.ch>
+ *    Vitaly Chipounov <vitaly.chipounov@epfl.ch>
+ *
+ * All contributors are listed in S2E-AUTHORS file.
+ *
+ */
+
 #ifdef _WIN32
 #include <windows.h>
 #endif
@@ -58,6 +72,9 @@
 #include "qemu/main-loop.h"
 #include "exec/log.h"
 #include "sysemu/cpus.h"
+
+//grin test
+#include "grin/tcg-llvm.h"
 
 /* #define DEBUG_TB_INVALIDATE */
 /* #define DEBUG_TB_FLUSH */
@@ -1321,6 +1338,12 @@ TranslationBlock *tb_gen_code(CPUState *cpu,
        that should be required is to flush the TBs, allocate a new TB,
        re-initialize it per above, and re-do the actual code generation.  */
     gen_code_size = tcg_gen_code(&tcg_ctx, tb);
+
+    //grin test
+    if(generate_llvm){
+    	tcg_llvm_gen_code(tcg_llvm_ctx, &tcg_ctx, tb);
+    }
+
     if (unlikely(gen_code_size < 0)) {
         goto buffer_overflow;
     }
@@ -1347,6 +1370,24 @@ TranslationBlock *tb_gen_code(CPUState *cpu,
         qemu_log_unlock();
     }
 #endif
+
+    //grin test
+    // Sanity check. We had a bug before where we were misrecording
+    // translated code sizes, and so TC blocks appeared to overlap.
+    int i;
+    if (generate_llvm) {
+    	for (i = 0; i < tcg_ctx.tb_ctx.nb_tbs; i++) {
+    		TranslationBlock *other = &tcg_ctx.tb_ctx.tbs[i];
+            if (tb == other) continue;
+            if (other->llvm_tc_ptr <= tb->llvm_tc_ptr &&
+                    tb->llvm_tc_ptr < other->llvm_tc_end) {
+                assert(false && "Allocating apparently overlapping blocks!");
+            } else if (other->llvm_tc_ptr < tb->llvm_tc_end &&
+                    tb->llvm_tc_end <= other->llvm_tc_end) {
+                assert(false && "Allocating apparently overlapping blocks!");
+            }
+        }
+    }
 
     tcg_ctx.code_gen_ptr = (void *)
         ROUND_UP((uintptr_t)gen_code_buf + gen_code_size + search_size,
