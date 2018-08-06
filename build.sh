@@ -90,7 +90,7 @@ fi
     --target-list=x86_64-linux-user \
     $COMPILER_CONFIG \
     $LLVM_CONFIG \
-    $MISC_CONFIG \
+#    $MISC_CONFIG \
     "$@"
 
 
