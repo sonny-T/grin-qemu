@@ -60,7 +60,7 @@
 #include <map>
 
 //#include "panda/cheaders.h"
-#include "grin/tcg-llvm.h"
+#include "grin/include/tcg-llvm.h"
 //#include "panda/helper_runtime.h"
 
 #if defined(CONFIG_SOFTMMU)

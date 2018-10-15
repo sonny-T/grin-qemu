@@ -81,6 +81,11 @@ stap:
 endif
 .PHONY: stap
 
+#########################################################
+# Grin code
+#########################################################
+include $(SRC_PATH)/grin/Makefile.grin.target
+
 all: $(PROGS) stap
 
 # Dummy command so that make thinks it has done something

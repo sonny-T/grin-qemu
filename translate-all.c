@@ -74,7 +74,7 @@
 #include "sysemu/cpus.h"
 
 //grin test
-#include "grin/tcg-llvm.h"
+#include "grin/include/tcg-llvm.h"
 
 /* #define DEBUG_TB_INVALIDATE */
 /* #define DEBUG_TB_FLUSH */
@@ -1341,7 +1341,8 @@ TranslationBlock *tb_gen_code(CPUState *cpu,
 
     //grin test
     if(generate_llvm){
-    	tcg_llvm_gen_code(tcg_llvm_ctx, &tcg_ctx, tb);
+    	/* This is a very boring bug */
+    	//tcg_llvm_gen_code(tcg_llvm_ctx, &tcg_ctx, tb);
     }
 
     if (unlikely(gen_code_size < 0)) {
