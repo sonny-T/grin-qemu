@@ -8452,7 +8452,10 @@ void gen_intermediate_code(CPUX86State *env, TranslationBlock *tb)
         if (num_insns == max_insns && (tb->cflags & CF_LAST_IO)) {
             gen_io_start();
         }
-
+        if(pc_ptr==0x400539)
+        {
+        	printf("It's me\n");
+        }
         pc_ptr = disas_insn(env, dc, pc_ptr);
         /* stop translation if indicated */
         if (dc->is_jmp)

@@ -9785,7 +9785,10 @@ abi_long do_syscall(void *cpu_env, int num, abi_long arg1,
         _mcleanup();
 #endif
         gdb_exit(cpu_env, arg1);
-        ret = get_errno(exit_group(arg1));
+        /* dynamic execute, jump branch*/
+        if(1){
+        	ret = get_errno(exit_group(arg1));
+        }
         break;
 #endif
     case TARGET_NR_setdomainname:
