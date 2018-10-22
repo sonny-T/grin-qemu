@@ -80,6 +80,11 @@ static TCGv cpu_regs[CPU_NB_REGS];
 static TCGv cpu_seg_base[6];
 static TCGv_i64 cpu_bndl[4];
 static TCGv_i64 cpu_bndu[4];
+
+/* dynamic execute, jump branch*/
+static TCGv cpu_jmp_br0;
+static TCGv cpu_jmp_br1;
+
 /* local temps */
 static TCGv cpu_T0, cpu_T1;
 /* local register indexes (only used inside old micro ops) */
@@ -8314,6 +8319,12 @@ void tcg_x86_init(void)
                                     "cc_src");
     cpu_cc_src2 = tcg_global_mem_new(cpu_env, offsetof(CPUX86State, cc_src2),
                                      "cc_src2");
+
+    /* dynamic execute, jump branch*/
+    cpu_jmp_br0 = tcg_global_mem_new(cpu_env, offsetof(CPUX86State, jmp_br0),
+                                         "jmp_br0");
+    cpu_jmp_br1 = tcg_global_mem_new(cpu_env, offsetof(CPUX86State, jmp_br1),
+                                             "jmp_br1");
 
     for (i = 0; i < CPU_NB_REGS; ++i) {
         cpu_regs[i] = tcg_global_mem_new(cpu_env,

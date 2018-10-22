@@ -168,6 +168,9 @@ static inline tcg_target_ulong cpu_tb_exec(CPUState *cpu, TranslationBlock *itb)
     }
 #endif /* DEBUG_DISAS */
 
+    if(itb->pc==0x400526){
+    	printf("cc_dst:  %ld  cc_src %ld\n",env->cc_dst,env->cc_src);
+    }
     cpu->can_do_io = !use_icount;
     ret = tcg_qemu_tb_exec(env, tb_ptr);
     cpu->can_do_io = 1;
@@ -634,6 +637,8 @@ int cpu_exec(CPUState *cpu)
     /* replay_interrupt may need current_cpu */
     current_cpu = cpu;
 
+    CPUArchState *env = cpu->env_ptr;
+
     if (cpu_handle_halt(cpu)) {
         return EXCP_HALTED;
     }
@@ -681,6 +686,11 @@ int cpu_exec(CPUState *cpu)
             /* Try to align the host and virtual clocks
                if the guest is in advance */
             align_clocks(&sc, cpu);
+
+            if(tb->pc==0x400526){
+            	printf("cc_dst:  %ld  cc_src %ld\n",env->cc_dst,env->cc_src);
+            }
+
         }
     }
 

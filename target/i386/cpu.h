@@ -989,6 +989,10 @@ typedef struct CPUX86State {
                         flags and DF are set to zero because they are
                         stored elsewhere */
 
+    /* dynamic execute, jump branch*/
+    target_ulong jmp_br0;
+	target_ulong jmp_br1;
+
     /* emulator internal eflags handling */
     target_ulong cc_dst;
     target_ulong cc_src;
