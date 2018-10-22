@@ -6540,6 +6540,10 @@ static target_ulong disas_insn(CPUX86State *env, DisasContext *s,
     do_jcc:
         next_eip = s->pc - s->cs_base;
         tval += next_eip;
+        /* dynamic execute, jump branch*/
+        tcg_gen_movi_tl(cpu_jmp_br0,next_eip);
+        tcg_gen_movi_tl(cpu_jmp_br1,tval);
+
         if (dflag == MO_16) {
             tval &= 0xffff;
         }
