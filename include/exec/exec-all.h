@@ -398,6 +398,10 @@ struct TranslationBlock {
     uint8_t *llvm_tc_end;
     struct TranslationBlock* llvm_tb_next[2];
 
+    /* dynamic execute, jump branch*/
+    int JccFlag;
+    int RetFlag;
+
 };
 
 void tb_free(TranslationBlock *tb);

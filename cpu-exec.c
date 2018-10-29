@@ -42,6 +42,9 @@ const int has_llvm_engine = 1;
 int generate_llvm = 0;
 int execute_llvm = 0;
 
+/* dynamic execute, jump branch*/
+CPUArchState GTcpu;
+
 /* -icount align implementation. */
 
 typedef struct SyncClocks {
@@ -168,9 +171,6 @@ static inline tcg_target_ulong cpu_tb_exec(CPUState *cpu, TranslationBlock *itb)
     }
 #endif /* DEBUG_DISAS */
 
-    if(itb->pc==0x400526){
-    	printf("cc_dst:  %ld  cc_src %ld\n",env->cc_dst,env->cc_src);
-    }
     cpu->can_do_io = !use_icount;
     ret = tcg_qemu_tb_exec(env, tb_ptr);
     cpu->can_do_io = 1;
@@ -195,6 +195,15 @@ static inline tcg_target_ulong cpu_tb_exec(CPUState *cpu, TranslationBlock *itb)
             assert(cc->set_pc);
             cc->set_pc(cpu, last_tb->pc);
         }
+    }
+
+    /* dynamic execute, jump branch*/
+    if(itb->pc==0x400526 && itb->JccFlag){
+    	printf("cc_dst:  %ld  cc_src %ld\n",env->cc_dst,env->cc_src);
+    	GTcpu = *env;
+    }
+    if((itb->pc < 0x400558) && itb->RetFlag){
+    	printf("cc_dst:  %ld  cc_src %ld\n",env->cc_dst,env->cc_src);
     }
     return ret;
 }
@@ -640,9 +649,6 @@ int cpu_exec(CPUState *cpu)
 
     /* replay_interrupt may need current_cpu */
     current_cpu = cpu;
-
-    CPUArchState *env = cpu->env_ptr;
-
     if (cpu_handle_halt(cpu)) {
         return EXCP_HALTED;
     }
@@ -691,9 +697,6 @@ int cpu_exec(CPUState *cpu)
                if the guest is in advance */
             align_clocks(&sc, cpu);
 
-            if(tb->pc==0x400526){
-            	printf("cc_dst:  %ld  cc_src %ld\n",env->cc_dst,env->cc_src);
-            }
 
         }
     }

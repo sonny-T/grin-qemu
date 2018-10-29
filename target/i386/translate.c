@@ -109,6 +109,11 @@ typedef struct DisasContext {
     target_ulong pc; /* pc = eip + cs_base */
     int is_jmp; /* 1 = means jump (stop translation), 2 means CPU
                    static state change (stop translation) */
+
+    /* dynamic execute, jump branch*/
+    int is_jcc;
+    int is_ret;
+
     /* current block context */
     target_ulong cs_base; /* base of CS segment */
     int pe;     /* protected mode */
@@ -6392,6 +6397,8 @@ static target_ulong disas_insn(CPUX86State *env, DisasContext *s,
         /************************/
         /* control */
     case 0xc2: /* ret im */
+    	/* dynamic execute, jump branch*/
+    	s->is_ret = 1;
         val = cpu_ldsw_code(env, s->pc);
         s->pc += 2;
         ot = gen_pop_T0(s);
@@ -6402,6 +6409,8 @@ static target_ulong disas_insn(CPUX86State *env, DisasContext *s,
         gen_eob(s);
         break;
     case 0xc3: /* ret */
+    	/* dynamic execute, jump branch*/
+    	s->is_ret = 1;
         ot = gen_pop_T0(s);
         gen_pop_update(s, ot);
         /* Note that gen_pop_T0 uses a zero-extending load.  */
@@ -6540,9 +6549,11 @@ static target_ulong disas_insn(CPUX86State *env, DisasContext *s,
     do_jcc:
         next_eip = s->pc - s->cs_base;
         tval += next_eip;
+
         /* dynamic execute, jump branch*/
         tcg_gen_movi_tl(cpu_jmp_br0,next_eip);
         tcg_gen_movi_tl(cpu_jmp_br1,tval);
+        s->is_jcc = 1;
 
         if (dflag == MO_16) {
             tval &= 0xffff;
@@ -8368,6 +8379,10 @@ void gen_intermediate_code(CPUX86State *env, TranslationBlock *tb)
     int num_insns;
     int max_insns;
 
+    /* dynamic execute, jump branch*/
+    tb->JccFlag = 0;
+    tb->RetFlag = 0;
+
     /* generate intermediate code */
     pc_start = tb->pc;
     cs_base = tb->cs_base;
@@ -8423,6 +8438,10 @@ void gen_intermediate_code(CPUX86State *env, TranslationBlock *tb)
         printf("ERROR addseg\n");
 #endif
 
+    /* dynamic execute, jump branch*/
+    dc->is_jcc = 0;
+    dc->is_ret = 0;
+
     cpu_T0 = tcg_temp_new();
     cpu_T1 = tcg_temp_new();
     cpu_A0 = tcg_temp_new();
@@ -8467,11 +8486,16 @@ void gen_intermediate_code(CPUX86State *env, TranslationBlock *tb)
         if (num_insns == max_insns && (tb->cflags & CF_LAST_IO)) {
             gen_io_start();
         }
-        if(pc_ptr==0x400539)
-        {
-        	printf("It's me\n");
-        }
         pc_ptr = disas_insn(env, dc, pc_ptr);
+
+        /* dynamic execute, jump branch*/
+        if(dc->is_jcc){
+        	tb->JccFlag = 1;
+        }
+        if(dc->is_ret){
+        	tb->RetFlag = 1;
+        }
+
         /* stop translation if indicated */
         if (dc->is_jmp)
             break;
