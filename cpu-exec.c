@@ -44,6 +44,7 @@ int execute_llvm = 0;
 
 /* dynamic execute, jump branch*/
 CPUArchState GTcpu;
+ArchCPUStateQueueLine CPUQueueLine;
 
 /* -icount align implementation. */
 
@@ -52,6 +53,44 @@ typedef struct SyncClocks {
     int64_t last_cpu_icount;
     int64_t realtime_clock;
 } SyncClocks;
+
+/* dynamic execute, jump branch*/
+void initArchCPUStateQueueLine(void){
+	CPUQueueLine.front = CPUQueueLine.rear = (QueuePtr)malloc(sizeof(QNode));
+	if(CPUQueueLine.front == NULL){
+		fprintf(stderr,"Initial queue node failed!\n");
+		exit(0);
+	}
+	CPUQueueLine.front->next = NULL;
+}
+
+void insertArchCPUStateQueueLine(CPUArchState element){
+	QueuePtr q = (QueuePtr)malloc(sizeof(QNode));
+	if(q == NULL){
+		fprintf(stderr,"Alloca queue node failed!\n");
+	}
+	q->data = element;
+	q->next = NULL;
+	CPUQueueLine.rear->next = q;
+	CPUQueueLine.rear = q;
+}
+
+int isEmpty(void){ return CPUQueueLine.front == CPUQueueLine.rear ? 1:0; }
+
+CPUArchState deletArchCPUStateQueueLine(void){
+	CPUArchState element;
+	QueuePtr q = CPUQueueLine.front->next;
+	if(!isEmpty()){
+		element = q->data;
+		CPUQueueLine.front->next = q->next;
+		if(CPUQueueLine.rear==q){
+			CPUQueueLine.rear = CPUQueueLine.front;
+		}
+		free(q);
+
+	}
+	return element;
+}
 
 #if !defined(CONFIG_USER_ONLY)
 /* Allow the guest to have a max 3ms advance.
@@ -199,11 +238,13 @@ static inline tcg_target_ulong cpu_tb_exec(CPUState *cpu, TranslationBlock *itb)
 
     /* dynamic execute, jump branch*/
     if(itb->pc==0x400526 && itb->JccFlag){
-    	printf("cc_dst:  %ld  cc_src %ld\n",env->cc_dst,env->cc_src);
-    	GTcpu = *env;
+    	insertArchCPUStateQueueLine(*env);
     }
-    if((itb->pc < 0x400558) && itb->RetFlag){
-    	printf("cc_dst:  %ld  cc_src %ld\n",env->cc_dst,env->cc_src);
+    if((itb->pc > 0x400526 && itb->pc < 0x400558) && itb->RetFlag){
+    	GTcpu = deletArchCPUStateQueueLine();
+    	printf("%ld\n",GTcpu.jmp_br0);
+    	env->eip = GTcpu.jmp_br1;
+    	itb->RetFlag = 0;
     }
     return ret;
 }
@@ -360,10 +401,6 @@ static inline TranslationBlock *tb_find(CPUState *cpu,
        always be the same before a given translated block
        is executed. */
     cpu_get_tb_cpu_state(env, &pc, &cs_base, &flags);
-    if(pc==0x40053b)
-    {
-    	pc = env->jmp_br1;
-    }
     tb = atomic_rcu_read(&cpu->tb_jmp_cache[tb_jmp_cache_hash_func(pc)]);
     if (unlikely(!tb || tb->pc != pc || tb->cs_base != cs_base ||
                  tb->flags != flags)) {
@@ -656,6 +693,9 @@ int cpu_exec(CPUState *cpu)
     rcu_read_lock();
 
     cc->cpu_exec_enter(cpu);
+
+    /* dynamic execute, jump branch*/
+    initArchCPUStateQueueLine();
 
     /* Calculate difference between guest clock and host clock.
      * This delay includes the delay of the last cycle, so

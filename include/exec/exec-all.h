@@ -404,6 +404,21 @@ struct TranslationBlock {
 
 };
 
+/* dynamic execute, jump branch*/
+typedef struct QNode{
+	CPUArchState data;
+	struct QNode * next;
+}QNode,*QueuePtr;
+
+typedef struct{
+	QueuePtr front;
+	QueuePtr rear;
+}ArchCPUStateQueueLine;
+void initArchCPUStateQueueLine(void);
+void insertArchCPUStateQueueLine(CPUArchState element);
+int isEmpty(void);
+CPUArchState deletArchCPUStateQueueLine(void);
+
 void tb_free(TranslationBlock *tb);
 void tb_flush(CPUState *cpu);
 void tb_phys_invalidate(TranslationBlock *tb, tb_page_addr_t page_addr);
