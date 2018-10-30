@@ -4229,6 +4229,9 @@ int main(int argc, char **argv, char **envp)
     qemu_init_cpu_list();
     module_call_init(MODULE_INIT_QOM);
 
+    /* dynamic execute, jump branch*/
+    initArchCPUStateQueueLine();
+
     if ((envlist = envlist_create()) == NULL) {
         (void) fprintf(stderr, "Unable to allocate envlist\n");
         exit(EXIT_FAILURE);
