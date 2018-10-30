@@ -82,7 +82,7 @@ CPUArchState deletArchCPUStateQueueLine(void){
 	QueuePtr q = CPUQueueLine.front->next;
 	if(!isEmpty()){
 		element = q->data;
-		printf("element jmp_br0:  %lx  jmp_br1 %lx\n",element.jmp_br0,element.jmp_br1);
+		//printf("element jmp_br0:  %lx  jmp_br1 %lx\n",element.jmp_br0,element.jmp_br1);
 		CPUQueueLine.front->next = q->next;
 		if(CPUQueueLine.rear==q){
 			CPUQueueLine.rear = CPUQueueLine.front;
@@ -241,12 +241,19 @@ static inline tcg_target_ulong cpu_tb_exec(CPUState *cpu, TranslationBlock *itb)
     if(itb->pc==0x400526 && itb->JccFlag){
     	insertArchCPUStateQueueLine(*env);
     	printf("jmp_br0:  %lx  jmp_br1 %lx\n",env->jmp_br0,env->jmp_br1);
+
+    	//GTcpu = *env;
     }
     if((itb->pc > 0x400526 && itb->pc < 0x400558) && itb->RetFlag){
-    	GTcpu = deletArchCPUStateQueueLine();
+    	*env = GTcpu = deletArchCPUStateQueueLine();
     	printf("ret jmp_br0:  %lx  jmp_br1 %lx\n",GTcpu.jmp_br0,GTcpu.jmp_br1);
     	env->eip = GTcpu.jmp_br1;
     	itb->RetFlag = 0;
+
+    	//*env = GTcpu;
+    	//env->eip = GTcpu.jmp_br1;
+    	//itb->RetFlag = 0;
+
     }
     return ret;
 }
