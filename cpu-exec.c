@@ -238,18 +238,19 @@ static inline tcg_target_ulong cpu_tb_exec(CPUState *cpu, TranslationBlock *itb)
     }
 
     /* dynamic execute, jump branch*/
-    if(itb->pc==0x400526 && itb->JccFlag){
+    if((itb->pc >= 0x40054d && itb->pc <= 0x4005ba) && itb->JccFlag){
     	insertArchCPUStateQueueLine(*env);
     	printf("jmp_br0:  %lx  jmp_br1 %lx\n",env->jmp_br0,env->jmp_br1);
 
     	//GTcpu = *env;
     }
-    if((itb->pc > 0x400526 && itb->pc < 0x400558) && itb->RetFlag){
+    if((itb->pc >= 0x40054d && itb->pc <= 0x4005ba) && itb->RetFlag){
     	*env = GTcpu = deletArchCPUStateQueueLine();
     	printf("ret jmp_br0:  %lx  jmp_br1 %lx\n",GTcpu.jmp_br0,GTcpu.jmp_br1);
     	env->eip = GTcpu.jmp_br1;
-    	itb->RetFlag = 0;
-
+    	if(isEmpty()){
+    		itb->RetFlag = 0;
+    	}
     	//*env = GTcpu;
     	//env->eip = GTcpu.jmp_br1;
     	//itb->RetFlag = 0;
