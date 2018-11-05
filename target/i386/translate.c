@@ -113,6 +113,9 @@ typedef struct DisasContext {
     /* dynamic execute, jump branch*/
     int is_jcc;
     int jcc_cond;
+    target_ulong addr_tak;
+    target_ulong addr_ntak;
+
     int is_ret;
 
     /* current block context */
@@ -6560,8 +6563,8 @@ static target_ulong disas_insn(CPUX86State *env, DisasContext *s,
         tval += next_eip;
 
         /* dynamic execute, jump branch*/
-        //tcg_gen_movi_tl(cpu_jmp_ntkn,next_eip);
-        //tcg_gen_movi_tl(cpu_jmp_tkn,tval);
+        s->addr_ntak = next_eip;
+        s->addr_tak = tval;
         s->is_jcc = 1;
 
         if (dflag == MO_16) {
@@ -8390,6 +8393,9 @@ void gen_intermediate_code(CPUX86State *env, TranslationBlock *tb)
 
     /* dynamic execute, jump branch*/
     tb->JccFlag = 0;
+    tb->jccCond = 0;
+    tb->addrTak = 0;
+    tb->addrnTak = 0;
     tb->RetFlag = 0;
 
     /* generate intermediate code */
@@ -8450,6 +8456,9 @@ void gen_intermediate_code(CPUX86State *env, TranslationBlock *tb)
     /* dynamic execute, jump branch*/
     dc->is_jcc = 0;
     dc->jcc_cond = 0;
+    dc->addr_tak = 0;
+    dc->addr_ntak = 0;
+
     dc->is_ret = 0;
 
     cpu_T0 = tcg_temp_new();
@@ -8501,6 +8510,9 @@ void gen_intermediate_code(CPUX86State *env, TranslationBlock *tb)
         /* dynamic execute, jump branch*/
         if(dc->is_jcc){
         	tb->JccFlag = 1;
+        	tb->jccCond = dc->jcc_cond;
+        	tb->addrTak = dc->addr_tak;
+        	tb->addrnTak = dc->addr_ntak;
         }
         if(dc->is_ret){
         	tb->RetFlag = 1;

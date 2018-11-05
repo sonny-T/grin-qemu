@@ -400,6 +400,10 @@ struct TranslationBlock {
 
     /* dynamic execute, jump branch*/
     int JccFlag;
+    int jccCond;
+    target_ulong addrTak;
+    target_ulong addrnTak;
+
     int RetFlag;
 
 };

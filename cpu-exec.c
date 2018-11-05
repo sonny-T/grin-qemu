@@ -242,6 +242,8 @@ static inline tcg_target_ulong cpu_tb_exec(CPUState *cpu, TranslationBlock *itb)
 //    	insertArchCPUStateQueueLine(*env);
 //    	printf("jmp_br0:  %lx  jmp_br1 %lx\n",env->jmp_br0,env->jmp_br1);
     	printf("cond_arg1:  %ld  cond_arg2 %ld\n",env->cond_arg1,env->cond_arg2);
+
+    	printf("jccCond: %d  addrTak: %lx  addrnTak: %lx\n",itb->jccCond,itb->addrTak,itb->addrnTak);
     }
 //    if((itb->pc >= 0x40055f && itb->pc <= 0x4005d3) && itb->RetFlag){
 //    	*env = GTcpu = deletArchCPUStateQueueLine();
