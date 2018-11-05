@@ -82,8 +82,8 @@ static TCGv_i64 cpu_bndl[4];
 static TCGv_i64 cpu_bndu[4];
 
 /* dynamic execute, jump branch*/
-static TCGv cpu_jmp_br0;
-static TCGv cpu_jmp_br1;
+static TCGv cpu_cond_arg1;
+static TCGv cpu_cond_arg2;
 
 /* local temps */
 static TCGv cpu_T0, cpu_T1;
@@ -112,6 +112,7 @@ typedef struct DisasContext {
 
     /* dynamic execute, jump branch*/
     int is_jcc;
+    int jcc_cond;
     int is_ret;
 
     /* current block context */
@@ -1057,8 +1058,16 @@ static inline void gen_jcc1(DisasContext *s, int b, TCGLabel *l1)
     set_cc_op(s, CC_OP_DYNAMIC);
     if (cc.use_reg2) {
         tcg_gen_brcond_tl(cc.cond, cc.reg, cc.reg2, l1);
+        /* dynamic execute, jump branch*/
+        tcg_gen_mov_tl(cpu_cond_arg1,cc.reg);
+        tcg_gen_mov_tl(cpu_cond_arg2,cc.reg2);
+        s->jcc_cond = cc.cond;
     } else {
         tcg_gen_brcondi_tl(cc.cond, cc.reg, cc.imm, l1);
+        /* dynamic execute, jump branch*/
+        tcg_gen_mov_tl(cpu_cond_arg1,cc.reg);
+        tcg_gen_movi_tl(cpu_cond_arg2,cc.imm);
+        s->jcc_cond = cc.cond;
     }
 }
 
@@ -6551,8 +6560,8 @@ static target_ulong disas_insn(CPUX86State *env, DisasContext *s,
         tval += next_eip;
 
         /* dynamic execute, jump branch*/
-        tcg_gen_movi_tl(cpu_jmp_br0,next_eip);
-        tcg_gen_movi_tl(cpu_jmp_br1,tval);
+        //tcg_gen_movi_tl(cpu_jmp_ntkn,next_eip);
+        //tcg_gen_movi_tl(cpu_jmp_tkn,tval);
         s->is_jcc = 1;
 
         if (dflag == MO_16) {
@@ -8336,9 +8345,9 @@ void tcg_x86_init(void)
                                      "cc_src2");
 
     /* dynamic execute, jump branch*/
-    cpu_jmp_br0 = tcg_global_mem_new(cpu_env, offsetof(CPUX86State, jmp_br0),
+    cpu_cond_arg1 = tcg_global_mem_new(cpu_env, offsetof(CPUX86State, cond_arg1),
                                          "jmp_br0");
-    cpu_jmp_br1 = tcg_global_mem_new(cpu_env, offsetof(CPUX86State, jmp_br1),
+    cpu_cond_arg2 = tcg_global_mem_new(cpu_env, offsetof(CPUX86State, cond_arg2),
                                              "jmp_br1");
 
     for (i = 0; i < CPU_NB_REGS; ++i) {
@@ -8440,6 +8449,7 @@ void gen_intermediate_code(CPUX86State *env, TranslationBlock *tb)
 
     /* dynamic execute, jump branch*/
     dc->is_jcc = 0;
+    dc->jcc_cond = 0;
     dc->is_ret = 0;
 
     cpu_T0 = tcg_temp_new();

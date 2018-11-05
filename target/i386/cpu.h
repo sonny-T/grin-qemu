@@ -990,8 +990,8 @@ typedef struct CPUX86State {
                         stored elsewhere */
 
     /* dynamic execute, jump branch*/
-    target_ulong jmp_br0;
-	target_ulong jmp_br1;
+    target_ulong cond_arg1;
+	target_ulong cond_arg2;
 
     /* emulator internal eflags handling */
     target_ulong cc_dst;
