@@ -239,20 +239,82 @@ static inline tcg_target_ulong cpu_tb_exec(CPUState *cpu, TranslationBlock *itb)
 
     /* dynamic execute, jump branch*/
     if((itb->pc >= 0x40055f && itb->pc <= 0x4005d3) && itb->JccFlag){
-//    	insertArchCPUStateQueueLine(*env);
+    	insertArchCPUStateQueueLine(*env);
 //    	printf("jmp_br0:  %lx  jmp_br1 %lx\n",env->jmp_br0,env->jmp_br1);
-    	printf("cond_arg1:  %ld  cond_arg2 %ld\n",env->cond_arg1,env->cond_arg2);
 
+    	printf("cond_arg1:  %ld  cond_arg2 %ld\n",env->cond_arg1,env->cond_arg2);
     	printf("jccCond: %d  addrTak: %lx  addrnTak: %lx\n",itb->jccCond,itb->addrTak,itb->addrnTak);
     }
-//    if((itb->pc >= 0x40055f && itb->pc <= 0x4005d3) && itb->RetFlag){
-//    	*env = GTcpu = deletArchCPUStateQueueLine();
-//    	printf("ret jmp_br0:  %lx  jmp_br1 %lx\n",GTcpu.jmp_br0,GTcpu.jmp_br1);
-//    	env->eip = GTcpu.jmp_br1;
-//    	if(isEmpty()){
-//    		itb->RetFlag = 0;
-//    	}
-//    }
+    if((itb->pc >= 0x40055f && itb->pc <= 0x4005d3) && itb->RetFlag){
+    	*env = GTcpu = deletArchCPUStateQueueLine();
+    	printf("ret cond_arg1:  %lx  cond_arg2 %lx\n",GTcpu.cond_arg1,GTcpu.cond_arg2);
+
+
+    	switch(itb->jccCond){
+    	case TCG_COND_NEVER:
+    	case TCG_COND_NE:
+    		if(GTcpu.cond_arg1 != GTcpu.cond_arg2){
+    			env->eip = itb->addrnTak;
+    	    }
+    	    else
+    	    	env->eip = itb->addrTak;
+    	    break;
+    	case TCG_COND_ALWAYS:
+    	case TCG_COND_EQ:
+    		if(GTcpu.cond_arg1 == GTcpu.cond_arg2){
+    			env->eip = itb->addrnTak;
+    	    }
+    	    else
+    	    	env->eip = itb->addrTak;
+    	    break;
+    	case TCG_COND_LT:
+    	case TCG_COND_LTU:
+    		if(GTcpu.cond_arg1 < GTcpu.cond_arg2){
+    			env->eip = itb->addrnTak;
+    	    }
+    	   	else
+    	    	env->eip = itb->addrTak;
+    	    break;
+    	case TCG_COND_GE:
+    	case TCG_COND_GEU:
+    		if(GTcpu.cond_arg1 >= GTcpu.cond_arg2){
+    			env->eip = itb->addrnTak;
+    	    }
+    	    else
+    	    	env->eip = itb->addrTak;
+    	    break;
+    	case TCG_COND_LE:
+    	case TCG_COND_LEU:
+    		if(GTcpu.cond_arg1 <= GTcpu.cond_arg2){
+    			env->eip = itb->addrnTak;
+    	    }
+    	    else
+    	    	env->eip = itb->addrTak;
+    	    break;
+    	case TCG_COND_GT:
+    	case TCG_COND_GTU:
+    		printf("dddddddd\n");
+    		if(GTcpu.cond_arg1 > GTcpu.cond_arg2){
+    			env->eip = itb->addrnTak;
+    	    }
+    	    else
+    	    	env->eip = itb->addrTak;
+    	    break;
+    	default:
+    		printf("cond_arg1:  %ld  cond_arg2 %ld\n",env->cond_arg1,env->cond_arg2);
+    		exit(0);
+    		break;
+
+
+
+    	}
+
+    	//env->eip = GTcpu.jmp_br1;
+
+    	if(isEmpty()){
+    		itb->RetFlag = 0;
+    	}
+    }
     return ret;
 }
 
