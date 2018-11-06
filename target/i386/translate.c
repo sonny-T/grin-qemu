@@ -85,6 +85,10 @@ static TCGv_i64 cpu_bndu[4];
 static TCGv cpu_cond_arg1;
 static TCGv cpu_cond_arg2;
 
+static TCGv cpu_jccCond;
+static TCGv cpu_addrTkn;
+static TCGv cpu_addrnTkn;
+
 /* local temps */
 static TCGv cpu_T0, cpu_T1;
 /* local register indexes (only used inside old micro ops) */
@@ -112,10 +116,6 @@ typedef struct DisasContext {
 
     /* dynamic execute, jump branch*/
     int is_jcc;
-    int jcc_cond;
-    target_ulong addr_tak;
-    target_ulong addr_ntak;
-
     int is_ret;
 
     /* current block context */
@@ -1064,13 +1064,13 @@ static inline void gen_jcc1(DisasContext *s, int b, TCGLabel *l1)
         /* dynamic execute, jump branch*/
         tcg_gen_mov_tl(cpu_cond_arg1,cc.reg);
         tcg_gen_mov_tl(cpu_cond_arg2,cc.reg2);
-        s->jcc_cond = cc.cond;
+        tcg_gen_movi_tl(cpu_jccCond,cc.cond);
     } else {
         tcg_gen_brcondi_tl(cc.cond, cc.reg, cc.imm, l1);
         /* dynamic execute, jump branch*/
         tcg_gen_mov_tl(cpu_cond_arg1,cc.reg);
         tcg_gen_movi_tl(cpu_cond_arg2,cc.imm);
-        s->jcc_cond = cc.cond;
+        tcg_gen_movi_tl(cpu_jccCond,cc.cond);
     }
 }
 
@@ -6563,8 +6563,8 @@ static target_ulong disas_insn(CPUX86State *env, DisasContext *s,
         tval += next_eip;
 
         /* dynamic execute, jump branch*/
-        s->addr_ntak = next_eip;
-        s->addr_tak = tval;
+        tcg_gen_movi_tl(cpu_addrnTkn, next_eip);
+        tcg_gen_movi_tl(cpu_addrTkn, tval);
         s->is_jcc = 1;
 
         if (dflag == MO_16) {
@@ -8349,9 +8349,15 @@ void tcg_x86_init(void)
 
     /* dynamic execute, jump branch*/
     cpu_cond_arg1 = tcg_global_mem_new(cpu_env, offsetof(CPUX86State, cond_arg1),
-                                         "jmp_br0");
+                                         "cond_arg1");
     cpu_cond_arg2 = tcg_global_mem_new(cpu_env, offsetof(CPUX86State, cond_arg2),
-                                             "jmp_br1");
+                                             "cond_arg2");
+    cpu_jccCond = tcg_global_mem_new(cpu_env, offsetof(CPUX86State, jccCond),
+                                             "jccCond");
+    cpu_addrTkn = tcg_global_mem_new(cpu_env, offsetof(CPUX86State, addrTkn),
+                                             "addrTkn");
+    cpu_addrnTkn = tcg_global_mem_new(cpu_env, offsetof(CPUX86State, addrnTkn),
+                                             "addrnTkn");
 
     for (i = 0; i < CPU_NB_REGS; ++i) {
         cpu_regs[i] = tcg_global_mem_new(cpu_env,
@@ -8393,9 +8399,6 @@ void gen_intermediate_code(CPUX86State *env, TranslationBlock *tb)
 
     /* dynamic execute, jump branch*/
     tb->JccFlag = 0;
-    tb->jccCond = 0;
-    tb->addrTak = 0;
-    tb->addrnTak = 0;
     tb->RetFlag = 0;
 
     /* generate intermediate code */
@@ -8455,10 +8458,6 @@ void gen_intermediate_code(CPUX86State *env, TranslationBlock *tb)
 
     /* dynamic execute, jump branch*/
     dc->is_jcc = 0;
-    dc->jcc_cond = 0;
-    dc->addr_tak = 0;
-    dc->addr_ntak = 0;
-
     dc->is_ret = 0;
 
     cpu_T0 = tcg_temp_new();
@@ -8510,9 +8509,6 @@ void gen_intermediate_code(CPUX86State *env, TranslationBlock *tb)
         /* dynamic execute, jump branch*/
         if(dc->is_jcc){
         	tb->JccFlag = 1;
-        	tb->jccCond = dc->jcc_cond;
-        	tb->addrTak = dc->addr_tak;
-        	tb->addrnTak = dc->addr_ntak;
         }
         if(dc->is_ret){
         	tb->RetFlag = 1;

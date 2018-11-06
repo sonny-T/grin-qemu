@@ -993,6 +993,10 @@ typedef struct CPUX86State {
     target_ulong cond_arg1;
 	target_ulong cond_arg2;
 
+    target_ulong jccCond;
+    target_ulong addrTkn;
+    target_ulong addrnTkn;
+
     /* emulator internal eflags handling */
     target_ulong cc_dst;
     target_ulong cc_src;
