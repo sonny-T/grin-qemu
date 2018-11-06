@@ -251,12 +251,6 @@ static inline tcg_target_ulong cpu_tb_exec(CPUState *cpu, TranslationBlock *itb)
 
     	switch(GTcpu.jccCond){
     	case TCG_COND_NEVER:
-    		if(GTcpu.cond_arg1 != GTcpu.cond_arg2){
-    			env->eip = GTcpu.addrnTkn;
-    	    }
-    	    else
-    	    	env->eip = GTcpu.addrTkn;
-    	    break;
     	case TCG_COND_NE:
     		if(GTcpu.cond_arg1 != GTcpu.cond_arg2){
     			env->eip = GTcpu.addrnTkn;
@@ -265,12 +259,6 @@ static inline tcg_target_ulong cpu_tb_exec(CPUState *cpu, TranslationBlock *itb)
     	    	env->eip = GTcpu.addrTkn;
     	    break;
     	case TCG_COND_ALWAYS:
-    		if(GTcpu.cond_arg1 == GTcpu.cond_arg2){
-    			env->eip = GTcpu.addrnTkn;
-    	    }
-    	    else
-    	    	env->eip = GTcpu.addrTkn;
-    	    break;
     	case TCG_COND_EQ:
     		if(GTcpu.cond_arg1 == GTcpu.cond_arg2){
     			env->eip = GTcpu.addrnTkn;
@@ -279,12 +267,6 @@ static inline tcg_target_ulong cpu_tb_exec(CPUState *cpu, TranslationBlock *itb)
     	    	env->eip = GTcpu.addrTkn;
     	    break;
     	case TCG_COND_LT:
-    		if(GTcpu.cond_arg1 < GTcpu.cond_arg2){
-    			env->eip = GTcpu.addrnTkn;
-    	    }
-    	   	else
-    	    	env->eip = GTcpu.addrTkn;
-    	    break;
     	case TCG_COND_LTU:
     		if(GTcpu.cond_arg1 < GTcpu.cond_arg2){
     			env->eip = GTcpu.addrnTkn;
@@ -293,12 +275,6 @@ static inline tcg_target_ulong cpu_tb_exec(CPUState *cpu, TranslationBlock *itb)
     	    	env->eip = GTcpu.addrTkn;
     	    break;
     	case TCG_COND_GE:
-    		if(GTcpu.cond_arg1 >= GTcpu.cond_arg2){
-    			env->eip = GTcpu.addrnTkn;
-    	    }
-    	    else
-    	    	env->eip = GTcpu.addrTkn;
-    	    break;
     	case TCG_COND_GEU:
     		if(GTcpu.cond_arg1 >= GTcpu.cond_arg2){
     			env->eip = GTcpu.addrnTkn;
@@ -307,12 +283,6 @@ static inline tcg_target_ulong cpu_tb_exec(CPUState *cpu, TranslationBlock *itb)
     	    	env->eip = GTcpu.addrTkn;
     	    break;
     	case TCG_COND_LE:
-    		if(GTcpu.cond_arg1 <= GTcpu.cond_arg2){
-    			env->eip = GTcpu.addrnTkn;
-    	    }
-    	    else
-    	    	env->eip = GTcpu.addrTkn;
-    	    break;
     	case TCG_COND_LEU:
     		if(GTcpu.cond_arg1 <= GTcpu.cond_arg2){
     			env->eip = GTcpu.addrnTkn;
