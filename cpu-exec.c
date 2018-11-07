@@ -45,6 +45,7 @@ int execute_llvm = 0;
 /* dynamic execute, jump branch*/
 CPUArchState GTcpu;
 ArchCPUStateQueueLine CPUQueueLine;
+TBcallstack callstack;
 
 /* -icount align implementation. */
 
@@ -91,6 +92,38 @@ CPUArchState deletArchCPUStateQueueLine(void){
 
 	}
 	return element;
+}
+
+void CallStackInit(void){
+	callstack.top = 0;
+	callstack.maxsize = 50;
+	callstack.stack = (target_ulong *)malloc(50*sizeof(target_ulong));
+	if(!callstack.stack){
+		fprintf(stderr,"Call stack inital failed!\n");
+		exit(0);
+	}
+}
+target_ulong CallStackPop(void){
+	target_ulong p;
+	if(callstack.top==0){
+		fprintf(stderr,"It's a null stack!\n");
+		p = 0;
+		return p;
+	}
+	p = callstack.stack[callstack.top];
+	callstack.top--;
+	return p;
+}
+
+void CallStackPush(target_ulong x){
+	TBcallstack *cs;
+	cs = &callstack;
+	if(cs->top>=cs->maxsize){
+		cs->stack = realloc(cs->stack,2*cs->maxsize*sizeof(target_ulong));
+		cs->maxsize = cs->maxsize + 2*cs->maxsize;
+	}
+	cs->top++;
+	cs->stack[cs->top] = x;
 }
 
 #if !defined(CONFIG_USER_ONLY)

@@ -117,6 +117,7 @@ typedef struct DisasContext {
     /* dynamic execute, jump branch*/
     int is_jcc;
     int is_ret;
+    int is_call;
 
     /* current block context */
     target_ulong cs_base; /* base of CS segment */
@@ -4987,6 +4988,7 @@ static target_ulong disas_insn(CPUX86State *env, DisasContext *s,
             break;
         case 2: /* call Ev */
             /* XXX: optimize if memory (no 'and' is necessary) */
+        	s->is_call = 1;
             if (dflag == MO_16) {
                 tcg_gen_ext16u_tl(cpu_T0, cpu_T0);
             }
@@ -6480,6 +6482,7 @@ static target_ulong disas_insn(CPUX86State *env, DisasContext *s,
         break;
     case 0xe8: /* call im */
         {
+        	s->is_call = 1;
             if (dflag != MO_16) {
                 tval = (int32_t)insn_get(env, s, MO_32);
             } else {
@@ -8400,6 +8403,7 @@ void gen_intermediate_code(CPUX86State *env, TranslationBlock *tb)
     /* dynamic execute, jump branch*/
     tb->JccFlag = 0;
     tb->RetFlag = 0;
+    tb->next_addr = 0;
 
     /* generate intermediate code */
     pc_start = tb->pc;
@@ -8459,6 +8463,7 @@ void gen_intermediate_code(CPUX86State *env, TranslationBlock *tb)
     /* dynamic execute, jump branch*/
     dc->is_jcc = 0;
     dc->is_ret = 0;
+    dc->is_call = 0;
 
     cpu_T0 = tcg_temp_new();
     cpu_T1 = tcg_temp_new();
@@ -8512,6 +8517,10 @@ void gen_intermediate_code(CPUX86State *env, TranslationBlock *tb)
         }
         if(dc->is_ret){
         	tb->RetFlag = 1;
+        }
+        if(dc->is_call){
+        	tb->CallFlag = 1;
+        	tb->next_addr = pc_ptr;
         }
 
         /* stop translation if indicated */

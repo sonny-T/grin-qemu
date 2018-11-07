@@ -401,7 +401,16 @@ struct TranslationBlock {
     /* dynamic execute, jump branch*/
     int JccFlag;
     int RetFlag;
+    int CallFlag;
+    target_ulong next_addr;
 
+};
+
+/* dynamic execute, jump branch*/
+struct TBcallstack{
+	target_ulong *stack;
+	int top;
+	int maxsize;
 };
 
 /* dynamic execute, jump branch*/

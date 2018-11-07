@@ -29,6 +29,8 @@
 typedef struct TranslationBlock TranslationBlock;
 typedef struct TBContext TBContext;
 
+typedef struct TBcallstack TBcallstack;
+
 struct TBContext {
 
     TranslationBlock *tbs;
