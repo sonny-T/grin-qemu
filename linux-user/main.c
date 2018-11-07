@@ -4231,6 +4231,7 @@ int main(int argc, char **argv, char **envp)
 
     /* dynamic execute, jump branch*/
     initArchCPUStateQueueLine();
+    CallStackInit();
 
     if ((envlist = envlist_create()) == NULL) {
         (void) fprintf(stderr, "Unable to allocate envlist\n");

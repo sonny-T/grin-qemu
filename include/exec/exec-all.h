@@ -413,6 +413,11 @@ struct TBcallstack{
 	int maxsize;
 };
 
+void CallStackInit(void);
+target_ulong CallStackPop(void);
+void CallStackPush(target_ulong x);
+target_ulong lookupCallStack(void);
+
 /* dynamic execute, jump branch*/
 typedef struct QNode{
 	CPUArchState data;
