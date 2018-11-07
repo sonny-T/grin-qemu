@@ -277,37 +277,28 @@ static inline tcg_target_ulong cpu_tb_exec(CPUState *cpu, TranslationBlock *itb)
     }
 
     /* dynamic execute, jump branch*/
-    if((itb->pc >= 0x40055f && itb->pc <= 0x4005d3) && itb->JccFlag){
+    if((itb->pc >= 0x40055f && itb->pc <= 0x4005d6) && itb->JccFlag){
     	insertArchCPUStateQueueLine(*env);
-//    	printf("jmp_br0:  %lx  jmp_br1 %lx\n",env->jmp_br0,env->jmp_br1);
-
-    	printf("cond_arg1:  %ld  cond_arg2 %ld\n",env->cond_arg1,env->cond_arg2);
-    	printf("jccCond: %ld  addrTak: %lx  addrnTak: %lx\n",env->jccCond,env->addrTkn,env->addrnTkn);
+    	//printf("cond_arg1:  %ld  cond_arg2 %ld\n",env->cond_arg1,env->cond_arg2);
+    	//printf("jccCond: %ld  addrTak: %lx  addrnTak: %lx\n",env->jccCond,env->addrTkn,env->addrnTkn);
     }
     if(itb->CallFlag){
     	CallStackPush(itb->next_addr);
     }
 
-//    /* Test testing */
-//    if(itb->RetFlag)
-//    {
-//    	env->eip = CallStackPop();
-//    }
     target_ulong tmpcall;
-    if((itb->pc >= 0x40055f && itb->pc <= 0x4005d3) && itb->RetFlag){
+    if((itb->pc >= 0x40055f && itb->pc <= 0x4005d6) && itb->RetFlag){
     	if(!isEmpty()){
 			*env = GTcpu = deletArchCPUStateQueueLine();
-			printf("ret cond_arg1:  %lx  cond_arg2 %lx\n",GTcpu.cond_arg1,GTcpu.cond_arg2);
+			//printf("ret cond_arg1:  %lx  cond_arg2 %lx\n",GTcpu.cond_arg1,GTcpu.cond_arg2);
 			switch(GTcpu.jccCond){
 			case TCG_COND_NEVER:
 			case TCG_COND_NE:
 				if(GTcpu.cond_arg1 != GTcpu.cond_arg2){
 					env->eip = GTcpu.addrnTkn;
-					printf("GTcpu.addrnTkn: %lx\n",GTcpu.addrnTkn);
 				}
 				else{
 					env->eip = GTcpu.addrTkn;
-					printf("GTcpu.addrnTkn: %lx\n",GTcpu.addrTkn);
 				}
 				break;
 			case TCG_COND_ALWAYS:

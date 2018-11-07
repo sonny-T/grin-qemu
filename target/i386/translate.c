@@ -1061,17 +1061,17 @@ static inline void gen_jcc1(DisasContext *s, int b, TCGLabel *l1)
     }
     set_cc_op(s, CC_OP_DYNAMIC);
     if (cc.use_reg2) {
-        tcg_gen_brcond_tl(cc.cond, cc.reg, cc.reg2, l1);
         /* dynamic execute, jump branch*/
         tcg_gen_mov_tl(cpu_cond_arg1,cc.reg);
         tcg_gen_mov_tl(cpu_cond_arg2,cc.reg2);
         tcg_gen_movi_tl(cpu_jccCond,cc.cond);
+        tcg_gen_brcond_tl(cc.cond, cc.reg, cc.reg2, l1);
     } else {
-        tcg_gen_brcondi_tl(cc.cond, cc.reg, cc.imm, l1);
         /* dynamic execute, jump branch*/
         tcg_gen_mov_tl(cpu_cond_arg1,cc.reg);
         tcg_gen_movi_tl(cpu_cond_arg2,cc.imm);
         tcg_gen_movi_tl(cpu_jccCond,cc.cond);
+        tcg_gen_brcondi_tl(cc.cond, cc.reg, cc.imm, l1);
     }
 }
 
