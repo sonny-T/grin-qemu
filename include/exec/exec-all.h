@@ -432,6 +432,7 @@ void initArchCPUStateQueueLine(void);
 void insertArchCPUStateQueueLine(CPUArchState element);
 int isEmpty(void);
 CPUArchState deletArchCPUStateQueueLine(void);
+int traversArchCPUStateQueueLine(target_ulong Tkn,target_ulong nTkn);
 
 void tb_free(TranslationBlock *tb);
 void tb_flush(CPUState *cpu);

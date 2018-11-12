@@ -76,6 +76,19 @@ void insertArchCPUStateQueueLine(CPUArchState element){
 	CPUQueueLine.rear = q;
 }
 
+int traversArchCPUStateQueueLine(target_ulong Tkn,target_ulong nTkn){
+	QueuePtr p;
+	p = CPUQueueLine.front->next;
+	while(p != NULL){
+		if((p->data.addrTkn == Tkn) && (p->data.addrnTkn == nTkn)){
+			return 0;
+		};
+
+		p = p->next;
+	}
+	return 1;
+}
+
 int isEmpty(void){ return CPUQueueLine.front == CPUQueueLine.rear ? 1:0; }
 
 CPUArchState deletArchCPUStateQueueLine(void){
@@ -278,7 +291,9 @@ static inline tcg_target_ulong cpu_tb_exec(CPUState *cpu, TranslationBlock *itb)
 
     /* dynamic execute, jump branch*/
     if((itb->pc >= 0x40055f && itb->pc <= 0x4005d6) && itb->JccFlag){
-    	insertArchCPUStateQueueLine(*env);
+    	if(traversArchCPUStateQueueLine(env->addrTkn,env->addrnTkn)){
+    		insertArchCPUStateQueueLine(*env);
+    	}
     	//printf("cond_arg1:  %ld  cond_arg2 %ld\n",env->cond_arg1,env->cond_arg2);
     	//printf("jccCond: %ld  addrTak: %lx  addrnTak: %lx\n",env->jccCond,env->addrTkn,env->addrnTkn);
     }
@@ -291,6 +306,7 @@ static inline tcg_target_ulong cpu_tb_exec(CPUState *cpu, TranslationBlock *itb)
     	if(!isEmpty()){
 			*env = GTcpu = deletArchCPUStateQueueLine();
 			//printf("ret cond_arg1:  %lx  cond_arg2 %lx\n",GTcpu.cond_arg1,GTcpu.cond_arg2);
+			printf("ret addrTkn:  %lx  addrnTkn %lx\n",GTcpu.addrTkn,GTcpu.addrnTkn);
 			switch(GTcpu.jccCond){
 			case TCG_COND_NEVER:
 			case TCG_COND_NE:
@@ -352,8 +368,9 @@ static inline tcg_target_ulong cpu_tb_exec(CPUState *cpu, TranslationBlock *itb)
     	if(env->eip == tmpcall){
     		tmpcall = CallStackPop();
     		itb->RetFlag = -1;
-    		//printf("Eip equal to tmpcall\n");
+    		printf("Eip equal to tmpcall\n");
     	}
+    	printf("Modified eip %lx\n\n",env->eip);
     }
     else if(itb->RetFlag){
     	tmpcall = CallStackPop();
