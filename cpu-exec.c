@@ -76,11 +76,14 @@ void insertArchCPUStateQueueLine(CPUArchState element){
 	CPUQueueLine.rear = q;
 }
 
-int traversArchCPUStateQueueLine(target_ulong Tkn,target_ulong nTkn){
+int traversArchCPUStateQueueLine(CPUArchState *env,target_ulong Tkn,target_ulong nTkn){
 	QueuePtr p;
 	p = CPUQueueLine.front->next;
 	while(p != NULL){
 		if((p->data.addrTkn == Tkn) && (p->data.addrnTkn == nTkn)){
+			if(env->eip == nTkn){
+				env->eip = Tkn;
+			}
 			return 0;
 		};
 
@@ -291,11 +294,11 @@ static inline tcg_target_ulong cpu_tb_exec(CPUState *cpu, TranslationBlock *itb)
 
     /* dynamic execute, jump branch*/
     if((itb->pc >= 0x40055f && itb->pc <= 0x4005d6) && itb->JccFlag){
-    	if(traversArchCPUStateQueueLine(env->addrTkn,env->addrnTkn)){
+    	if(traversArchCPUStateQueueLine(env,env->addrTkn,env->addrnTkn)){
     		insertArchCPUStateQueueLine(*env);
     	}
-    	//printf("cond_arg1:  %ld  cond_arg2 %ld\n",env->cond_arg1,env->cond_arg2);
-    	//printf("jccCond: %ld  addrTak: %lx  addrnTak: %lx\n",env->jccCond,env->addrTkn,env->addrnTkn);
+    	printf("cond_arg1:  %ld  cond_arg2 %ld\n",env->cond_arg1,env->cond_arg2);
+    	printf("jccCond: %ld  addrTak: %lx  addrnTak: %lx\n",env->jccCond,env->addrTkn,env->addrnTkn);
     }
     if(itb->CallFlag){
     	CallStackPush(itb->next_addr);
@@ -368,7 +371,7 @@ static inline tcg_target_ulong cpu_tb_exec(CPUState *cpu, TranslationBlock *itb)
     	if(env->eip == tmpcall){
     		tmpcall = CallStackPop();
     		itb->RetFlag = -1;
-    		printf("Eip equal to tmpcall\n");
+    		//printf("Eip equal to tmpcall\n");
     	}
     	printf("Modified eip %lx\n\n",env->eip);
     }
