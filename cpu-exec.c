@@ -82,7 +82,12 @@ int traversArchCPUStateQueueLine(CPUArchState *env,target_ulong Tkn,target_ulong
 	while(p != NULL){
 		if((p->data.addrTkn == Tkn) && (p->data.addrnTkn == nTkn)){
 			if(env->eip == nTkn){
-				env->eip = Tkn;
+				//env->eip = Tkn;
+
+				/* If or not a loop */
+				/****            *          *
+				 *            TODO
+				 *                          */
 			}
 			return 0;
 		};
@@ -293,23 +298,22 @@ static inline tcg_target_ulong cpu_tb_exec(CPUState *cpu, TranslationBlock *itb)
     }
 
     /* dynamic execute, jump branch*/
-    if((itb->pc >= 0x40055f && itb->pc <= 0x4005d6) && itb->JccFlag){
+    if((itb->pc <= 0x40055c && itb->pc >= 0x400526) && itb->JccFlag){
     	if(traversArchCPUStateQueueLine(env,env->addrTkn,env->addrnTkn)){
     		insertArchCPUStateQueueLine(*env);
     	}
-    	printf("cond_arg1:  %ld  cond_arg2 %ld\n",env->cond_arg1,env->cond_arg2);
-    	printf("jccCond: %ld  addrTak: %lx  addrnTak: %lx\n",env->jccCond,env->addrTkn,env->addrnTkn);
+    	//printf("cond_arg1:  %ld  cond_arg2 %ld\n",env->cond_arg1,env->cond_arg2);
+    	//printf("jccCond: %ld  addrTak: %lx  addrnTak: %lx\n",env->jccCond,env->addrTkn,env->addrnTkn);
     }
     if(itb->CallFlag){
     	CallStackPush(itb->next_addr);
     }
 
     target_ulong tmpcall;
-    if((itb->pc >= 0x40055f && itb->pc <= 0x4005d6) && itb->RetFlag){
+    if((itb->pc <= 0x40055c && itb->pc >= 0x400526) && itb->RetFlag){
     	if(!isEmpty()){
 			*env = GTcpu = deletArchCPUStateQueueLine();
-			//printf("ret cond_arg1:  %lx  cond_arg2 %lx\n",GTcpu.cond_arg1,GTcpu.cond_arg2);
-			printf("ret addrTkn:  %lx  addrnTkn %lx\n",GTcpu.addrTkn,GTcpu.addrnTkn);
+			//printf("ret addrTkn:  %lx  addrnTkn %lx\n",GTcpu.addrTkn,GTcpu.addrnTkn);
 			switch(GTcpu.jccCond){
 			case TCG_COND_NEVER:
 			case TCG_COND_NE:
@@ -373,7 +377,7 @@ static inline tcg_target_ulong cpu_tb_exec(CPUState *cpu, TranslationBlock *itb)
     		itb->RetFlag = -1;
     		//printf("Eip equal to tmpcall\n");
     	}
-    	printf("Modified eip %lx\n\n",env->eip);
+    	//printf("Modified eip %lx\n\n",env->eip);
     }
     else if(itb->RetFlag){
     	tmpcall = CallStackPop();
